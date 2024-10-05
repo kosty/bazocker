@@ -1,0 +1,60 @@
+# Python3
+load("@aspect_bazel_lib//lib:transitions.bzl", "platform_transition_filegroup")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("//samples/python:py_layer.bzl", "py_oci_image")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+
+py_library(
+    name = "lib",
+    srcs = glob(["*.py"]),
+    data = [
+        "ololo.ini",
+    ] + glob(["data/**/*.txt"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazocker_deps//numpy"
+    ],
+)
+
+py_binary(
+    name = "bazocker",
+    srcs = glob(["*.py"]),
+    main = "main.py",
+    deps = [
+        ":lib",
+    ],
+)
+
+py_oci_image(
+    name = "py_image",
+    base = "@python3_11_9",
+    binary = ":bazocker",
+    entrypoint = [
+        "/bin/sh", "-c", "; ".join(["/samples/python/bazocker"])
+    ],
+)
+
+platform(
+    name = "x86_64_linux",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+platform_transition_filegroup(
+    name = "platform_py_image",
+    srcs = [":py_image"],
+    target_platform = select({
+        "@platforms//cpu:x86_64": ":x86_64_linux",
+        "//conditions:default": ":x86_64_linux",  # Default condition
+    }),
+)
+
+oci_tarball(
+    name = "python",
+    image = ":platform_py_image",
+    repo_tags = ["arsen/bazocker_python:v0.0.2-alpha"],
+)

@@ -1,0 +1,10 @@
+# Bazel
+
+bazel-bazocker
+bazel-bin
+bazel-out
+bazel-testlogs
+bin/
+blobs/
+include/
+lib/

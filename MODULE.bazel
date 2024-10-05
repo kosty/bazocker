@@ -1,0 +1,44 @@
+bazel_dep(name = "rules_oci", version = "1.8.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.8")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+oci.pull(
+    name = "ubuntu",
+    image = "ubuntu",
+    digest = "sha256:74f92a6b3589aa5cac6028719aaac83de4037bad4371ae79ba362834389035aa",
+    platforms = [
+        # "linux/arm64/v8",
+        "linux/amd64/v8",
+        "linux/amd64",
+    ],
+)
+
+oci.pull(
+    name = "python3_11_9",
+    image = "python:3.11.9",
+    digest = "sha256:a03f4e5b67980d474839e7b4d4a405871a4259690287d65060cff95d0cb311cd",
+    platforms = [
+        # "linux/arm64/v8",
+        "linux/amd64/v8",
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "ubuntu")
+use_repo(oci, "python3_11_9")
+
+bazel_dep(name = "rules_python", version = "0.34.0")
+# Set up the Python toolchain.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
+# Change this to upgrade to a newer Python.
+python_version = "3.11.9"
+python.toolchain(python_version = python_version, is_default = True)
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "bazocker_deps",
+    python_version = python_version,
+    requirements_lock = "//samples/python:requirements.txt",
+)
+use_repo(pip, "bazocker_deps")

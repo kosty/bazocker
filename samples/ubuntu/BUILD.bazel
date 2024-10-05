@@ -1,0 +1,49 @@
+load("@aspect_bazel_lib//lib:transitions.bzl", "platform_transition_filegroup")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+
+pkg_tar(
+    name = "app",
+    srcs = ["test.sh"],
+    mode = "0755",
+    package_dir = "/usr/bin"
+)
+
+oci_image(
+    name = "image",
+    base = "@python3_11_9",
+    cmd = ["test.sh"],
+    tars = [":app"],
+)
+
+platform(
+    name = "x86_64_linux",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+platform_transition_filegroup(
+    name = "platform_image",
+    srcs = [":image"],
+    target_platform = select({
+        "@platforms//cpu:x86_64": ":x86_64_linux",
+        "//conditions:default": ":x86_64_linux",  # Default condition
+    }),
+)
+
+oci_tarball(
+    name = "ubuntu",
+    image = ":platform_image",
+    repo_tags = ["arsen/bazocker_ubuntu:v0.0.1-alpha"],
+)
+
+
+# oci_push(
+#     name = "push",
+#     image = ":platform_image",
+#     remote_tags = ["v0.0.1"],
+#     repository = "arsen/my_example",
+# )
