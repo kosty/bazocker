@@ -3,12 +3,13 @@
 Install `bazelisk` for your target OS, then run
 
 ## For basic python docker image
-```sh
-bazel run :python_tarball
+
+```sh {"id":"01J9FCFFGRCZWPVQ10QK86WCPA"}
+bazel run //samples/python
 ```
 
 ## For generic ubuntu image
 
-```sh
-bazel run :ubuntu_tarball
+```sh {"id":"01J9FCFFGRCZWPVQ10QP05JGZX"}
+bazel run //samples/ubuntu
 ```
